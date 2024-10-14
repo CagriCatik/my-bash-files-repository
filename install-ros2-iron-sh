@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Script to install ROS 2 Iron Irwini on Ubuntu 22.04 (Jammy Jellyfish)
+# Author: [Your Name]
+# Date: [Today's Date]
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+LOGFILE="ros2_iron_install.log"
+exec > >(tee -i $LOGFILE)
+exec 2>&1
+
+echo "-----------------------------------------------"
+echo "ROS 2 Iron Irwini Installation Script for Ubuntu 22.04"
+echo "Logging installation process to $LOGFILE"
+echo "-----------------------------------------------"
+
+# Step 1: Update package index
+echo "Updating package index..."
+sudo apt update
+echo "Package index updated."
+
+# Step 2: Install required packages for adding repositories over HTTPS
+echo "Installing necessary packages (curl, gnupg2, lsb-release, software-properties-common)..."
+sudo apt install -y curl gnupg2 lsb-release software-properties-common
+echo "Required packages installed."
+
+# Step 3: Add the ROS 2 GPG key
+echo "Adding ROS 2 GPG key..."
+curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+echo "ROS 2 GPG key added."
+
+# Step 4: Add the ROS 2 repository
+echo "Adding ROS 2 repository to sources list..."
+sudo sh -c 'echo "deb http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list'
+echo "ROS 2 repository added."
+
+# Step 5: Update package index again after adding ROS repository
+echo "Updating package index again to include ROS 2 packages..."
+sudo apt update
+echo "Package index updated."
+
+# Step 6: Install ROS 2 Iron desktop full package
+echo "Installing ROS 2 Iron desktop full package (this may take a while)..."
+sudo apt install -y ros-iron-desktop
+echo "ROS 2 Iron desktop installed."
+
+# Step 7: Source the ROS 2 environment automatically in bashrc
+echo "Adding ROS 2 setup script to .bashrc..."
+if grep -Fxq "source /opt/ros/iron/setup.bash" ~/.bashrc
+then
+    echo "ROS 2 setup already present in .bashrc"
+else
+    echo "source /opt/ros/iron/setup.bash" >> ~/.bashrc
+    echo "ROS 2 setup added to .bashrc."
+fi
+source ~/.bashrc
+
+# Step 8: Install essential ROS 2 tools and dependencies
+echo "Installing essential ROS 2 tools (colcon, rosdep, argcomplete)..."
+sudo apt install -y python3-colcon-common-extensions python3-rosdep python3-argcomplete ros-iron-ros-base
+echo "Essential ROS 2 tools installed."
+
+# Step 9: Initialize rosdep
+echo "Initializing rosdep..."
+sudo rosdep init
+rosdep update
+echo "rosdep initialized and updated."
+
+# Step 10: Install Gazebo simulation (optional step)
+echo "Installing Gazebo ROS packages (optional)..."
+sudo apt install -y ros-iron-gazebo-ros-pkgs
+echo "Gazebo ROS packages installed."
+
+# Step 11: Set up locales
+echo "Setting up locales for UTF-8 support..."
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+echo "Locales set up."
+
+# Step 12: Installation complete
+echo "-----------------------------------------------"
+echo "ROS 2 Iron Irwini installation completed successfully!"
+echo "Please restart your terminal or run 'source /opt/ros/iron/setup.bash' to start using ROS 2."
+echo "-----------------------------------------------"
+
